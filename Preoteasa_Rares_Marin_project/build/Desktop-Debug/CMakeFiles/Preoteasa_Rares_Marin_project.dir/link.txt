@@ -1,0 +1,1 @@
+/usr/bin/clang++-18 -Wall -Wextra -g CMakeFiles/Preoteasa_Rares_Marin_project.dir/main_naive.cpp.o -o Preoteasa_Rares_Marin_project 

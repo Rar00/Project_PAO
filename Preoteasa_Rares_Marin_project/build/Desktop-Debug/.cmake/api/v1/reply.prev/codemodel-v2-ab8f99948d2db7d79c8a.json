@@ -1,0 +1,61 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-Debug-bf87c09da28470523295.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.5"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "Preoteasa_Rares_Marin_project",
+					"targetIndexes" : 
+					[
+						0
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "Preoteasa_Rares_Marin_project::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-Preoteasa_Rares_Marin_project-Debug-10ffb2bf028bef6264d7.json",
+					"name" : "Preoteasa_Rares_Marin_project",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/home/rares/proiecte/PAO/Project_PAO/Preoteasa_Rares_Marin_project/build/Desktop-Debug",
+		"source" : "/home/rares/proiecte/PAO/Project_PAO/Preoteasa_Rares_Marin_project"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 6
+	}
+}
