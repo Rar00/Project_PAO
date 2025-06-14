@@ -3,6 +3,9 @@
 #include <unordered_map>
 #include<chrono>
 #include<bitset>
+#include <thread>
+#include <omp.h>
+
 using namespace std;
 
 unsigned char s[256] =
@@ -364,6 +367,42 @@ string hex2string(unsigned char* hex, int n)
     return res;
 }
 
+void try_decrypt(u_int64_t j,string total_enc, string plaintext){
+    for (u_int64_t i = 0; i < j*25; i++) {
+
+    bitset<32> test_key=i;
+    string keytext=test_key.to_string();
+    unsigned char *key = string2hex(keytext, 32);
+    unsigned char *expanded_key = ExpandKey(key);
+
+    int n = total_enc.length();
+    string test_dec = "";
+#pragma unroll //from time around 1100 to 1050
+    for(int part=0; part<(n+31)/32; part++)
+    {
+        int cutoff = min(n, (part+1)*32);
+        string part_string = total_enc.substr(part*32, cutoff);
+        for(int i=0; cutoff%32 != 0 && i<32-cutoff%32; i++)
+        {
+            part_string += "0";
+        }
+        unsigned char* padded_string = string2hex(part_string, 32);
+        //            unsigned char* cipher = Encrypt(padded_string, expanded_key);
+        unsigned char* reverse_cipher = Decrypt(padded_string, expanded_key);
+        //            string res = hex2string(cipher, 16);
+        string dec = hex2string(reverse_cipher, 16);
+        //            total_enc += res;
+        test_dec += dec;
+        //cout<<"Part: "<<part_string<<" AES128: "<<res<<endl;
+        //cout<<"Decr: "<<dec<<endl;
+    }
+    if(test_dec.find(plaintext) != -1) {
+    //     auto stop_main = std::chrono::steady_clock::now();
+        std::cout << "Found key through bruteforce in thread "<<i<<endl;
+    }
+    }
+}
+
 int main() {
 
     string plaintext="";
@@ -388,6 +427,7 @@ int main() {
     int n = plaintext.length();
     string total_enc = "";
     string total_dec = "";
+
     auto start = std::chrono::steady_clock::now();
     for(int part=0; part<(n+31)/32; part++)
     {
@@ -416,8 +456,35 @@ int main() {
 
     // !!!!!!!!!!!!!!         Assumptions:
     // Somehow know the number for n
+    // Results for i=0->99:
+    //Initial val: for i=99 in the beginning -> ~1100 ms
+    // No optimization: Found key through bruteforce in 111049 ms
+    // Using pragma unroll before for(int part=0)  :   110093 ms
+    // Using pragma unroll also before for(u_int64_t i):  104929 ms
+    // Using 4 threads :   94903 ms  ,  4 cores at 100%  ,    using more threads didn't help(probably I'm not changing variables correctly)
+    // OPENMP : 4 threads,  4 cores at 100%  ,   138030 ms   , with 8 threads :  182511 ms ,    For openmp can't stop sim with return
+//    return 0;
 
-    for (u_int64_t i = 99; i < 999; i++) {
+//!!!!!!!!!!!!!!!!!! this for threads
+     const int NUM_THREADS = 4;
+    // std::thread* threads[NUM_THREADS];
+    // for (u_int64_t i = 0; i < NUM_THREADS; i++)
+    //     threads[i] = new std::thread(try_decrypt,i,total_enc,plaintext);
+
+    // for (int i = 0; i < NUM_THREADS; i++)
+    //     threads[i]->join();
+
+    // auto stop_main = std::chrono::steady_clock::now();
+    // std::cout << "Found key through bruteforce in " << std::chrono::duration_cast<std::chrono::milliseconds >(stop_main-start_main).count() << " ms" << std::endl;
+
+
+
+
+    omp_set_num_threads(NUM_THREADS);
+    #pragma omp parallel
+//    #pragma unroll //usually slows down the sim
+    #pragma omp for
+    for (u_int64_t i = 0; i < 999; i++) {
         bitset<32> test_key=i;
         string keytext=test_key.to_string();
         unsigned char *key = string2hex(keytext, 32);
@@ -425,6 +492,7 @@ int main() {
 
         int n = total_enc.length();
         string test_dec = "";
+ //       #pragma unroll //from time around 1100 to 1050
         for(int part=0; part<(n+31)/32; part++)
         {
             int cutoff = min(n, (part+1)*32);
@@ -446,7 +514,7 @@ int main() {
         if(test_dec.find(plaintext) != -1) {
             auto stop_main = std::chrono::steady_clock::now();
             std::cout << "Found key through bruteforce in " << std::chrono::duration_cast<std::chrono::milliseconds >(stop_main-start_main).count() << " ms" << std::endl;
-            return 0;
+ //           return 0;
         }
     }
 
