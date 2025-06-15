@@ -460,30 +460,29 @@ int main() {
     //Initial val: for i=99 in the beginning -> ~1100 ms
     // No optimization: Found key through bruteforce in 111049 ms
     // Using pragma unroll before for(int part=0)  :   110093 ms
-    // Using pragma unroll also before for(u_int64_t i):  104929 ms
-    // Using 4 threads :   94903 ms  ,  4 cores at 100%  ,    using more threads didn't help(probably I'm not changing variables correctly)
-    // OPENMP : 4 threads,  4 cores at 100%  ,   138030 ms   , with 8 threads :  182511 ms ,    For openmp can't stop sim with return
+    // Using pragma unroll also before for(u_int64_t i): using 4 GB ram  104929 ms, using 8 GB ram:  117774ms
+    // Using 4 threads :   94903 ms  ,  4 cores at 100%  ,    using more threads didn't help(probably I'm not changing variables correctly), with 8 GB ram:  89835  ms
+    // OPENMP : 4 threads,  4 cores at 100%  ,   138030 ms   , with 8 threads :  182511 ms ,    For openmp can't stop sim with return, with 8 GB ram :  135285 ms
 //    return 0;
 
 //!!!!!!!!!!!!!!!!!! this for threads
      const int NUM_THREADS = 4;
-    // std::thread* threads[NUM_THREADS];
-    // for (u_int64_t i = 0; i < NUM_THREADS; i++)
-    //     threads[i] = new std::thread(try_decrypt,i,total_enc,plaintext);
+    std::thread* threads[NUM_THREADS];
+    for (u_int64_t i = 0; i < NUM_THREADS; i++)
+        threads[i] = new std::thread(try_decrypt,i,total_enc,plaintext);
 
-    // for (int i = 0; i < NUM_THREADS; i++)
-    //     threads[i]->join();
+    for (int i = 0; i < NUM_THREADS; i++)
+        threads[i]->join();
 
-    // auto stop_main = std::chrono::steady_clock::now();
-    // std::cout << "Found key through bruteforce in " << std::chrono::duration_cast<std::chrono::milliseconds >(stop_main-start_main).count() << " ms" << std::endl;
+    auto stop_main = std::chrono::steady_clock::now();
+    std::cout << "Found key through bruteforce in " << std::chrono::duration_cast<std::chrono::milliseconds >(stop_main-start_main).count() << " ms" << std::endl;
 
+     return 0;
+    // omp_set_num_threads(NUM_THREADS);
+    // #pragma omp parallel
+    // #pragma omp for
 
-
-
-    omp_set_num_threads(NUM_THREADS);
-    #pragma omp parallel
-//    #pragma unroll //usually slows down the sim
-    #pragma omp for
+#pragma unroll //usually slows down the sim
     for (u_int64_t i = 0; i < 999; i++) {
         bitset<32> test_key=i;
         string keytext=test_key.to_string();
@@ -497,6 +496,7 @@ int main() {
         {
             int cutoff = min(n, (part+1)*32);
             string part_string = total_enc.substr(part*32, cutoff);
+#pragma unroll //usually slows down the sim
             for(int i=0; cutoff%32 != 0 && i<32-cutoff%32; i++)
             {
                 part_string += "0";
@@ -514,7 +514,7 @@ int main() {
         if(test_dec.find(plaintext) != -1) {
             auto stop_main = std::chrono::steady_clock::now();
             std::cout << "Found key through bruteforce in " << std::chrono::duration_cast<std::chrono::milliseconds >(stop_main-start_main).count() << " ms" << std::endl;
- //           return 0;
+           return 0;
         }
     }
 
